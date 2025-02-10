@@ -47,65 +47,15 @@ const char* html_content = R"rawliteral(
 </html>
 )rawliteral";
 
-static esp_err_t index_handler(httpd_req_t *req) {
-  httpd_resp_set_type(req, "text/html");
-  return httpd_resp_send(req, html_content, strlen(html_content));
-}
 
-
-
-static esp_err_t cmd_handler(httpd_req_t *req) {
-  char* buf;
-  size_t buf_len;
-  char variable[32] = {0};
-
-  buf_len = httpd_req_get_url_query_len(req) + 1;
-  if (buf_len > 1) {
-    buf = (char*)malloc(buf_len);
-    if (!buf) {
-      httpd_resp_send_500(req);
-      return ESP_FAIL;
-    }
-    if (httpd_req_get_url_query_str(req, buf, buf_len) == ESP_OK) {
-      if (httpd_query_key_value(buf, "cmd", variable, sizeof(variable)) == ESP_OK) {
-        Serial.println(variable); // Выводим команду в Serial
-      }
-    }
-    free(buf);
-  }
-
-  httpd_resp_send(req, NULL, 0);
-  return ESP_OK;
-}
 
 #define PART_BOUNDARY "123456789000000000000987654321"
-//
-// #define PWDN_GPIO_NUM     32
-// #define RESET_GPIO_NUM    -1
-// #define XCLK_GPIO_NUM      0
-// #define SIOD_GPIO_NUM     26
-// #define SIOC_GPIO_NUM     27
-// 
-// #define Y9_GPIO_NUM       35
-// #define Y8_GPIO_NUM       34
-// #define Y7_GPIO_NUM       39
-// #define Y6_GPIO_NUM       36
-// #define Y5_GPIO_NUM       21
-// #define Y4_GPIO_NUM       19
-// #define Y3_GPIO_NUM       18
-// #define Y2_GPIO_NUM        5
-// #define VSYNC_GPIO_NUM    25
-// #define HREF_GPIO_NUM     23
-// #define PCLK_GPIO_NUM     22
-//
 
 static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\nX-Timestamp: %d.%06d\r\n\r\n";
 
 httpd_handle_t stream_httpd = NULL;
-
-
 
 static esp_err_t stream_handler(httpd_req_t *req) {
   camera_fb_t *fb = NULL;
@@ -186,14 +136,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 void startCameraServer() {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.server_port = 80;
-
-  httpd_uri_t index_uri = {
-    .uri = "/",
-    .method = HTTP_GET,
-    .handler = index_handler,
-    .user_ctx = NULL
-  };
-
+  
   httpd_uri_t stream_uri = {
     .uri = "/stream",
     .method = HTTP_GET,
@@ -201,17 +144,9 @@ void startCameraServer() {
     .user_ctx = NULL
   };
 
-  httpd_uri_t cmd_uri = {
-    .uri = "/control",
-    .method = HTTP_GET,
-    .handler = cmd_handler,
-    .user_ctx = NULL
-  };
 
   if (httpd_start(&stream_httpd, &config) == ESP_OK) {
-    httpd_register_uri_handler(stream_httpd, &index_uri);
     httpd_register_uri_handler(stream_httpd, &stream_uri);
-    httpd_register_uri_handler(stream_httpd, &cmd_uri);
   }
 }
 
