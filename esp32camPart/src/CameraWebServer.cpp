@@ -8,46 +8,27 @@
 #include "soc/rtc_cntl_reg.h"  
 #include "esp_http_server.h"
 
+#define PWDN_GPIO_NUM  32
+#define RESET_GPIO_NUM -1
+#define XCLK_GPIO_NUM  0
+#define SIOD_GPIO_NUM  26
+#define SIOC_GPIO_NUM  27
+
+#define Y9_GPIO_NUM    35
+#define Y8_GPIO_NUM    34
+#define Y7_GPIO_NUM    39
+#define Y6_GPIO_NUM    36
+#define Y5_GPIO_NUM    21
+#define Y4_GPIO_NUM    19
+#define Y3_GPIO_NUM    18
+#define Y2_GPIO_NUM    5
+#define VSYNC_GPIO_NUM 25
+#define HREF_GPIO_NUM  23
+#define PCLK_GPIO_NUM  22
+
+
 char* ssid = "HUAWEI-1045ST";
 const char* password = "Tyan2006yany";
-
-const char* html_content = R"rawliteral(
-<!DOCTYPE html>
-<html>
-<head>
-  <title>ESP32 Camera</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
-    .button {
-      padding: 20px;
-      font-size: 20px;
-      margin: 10px;
-      cursor: pointer;
-    }
-    #stream { margin-top: 20px; }
-  </style>
-</head>
-<body>
-  <h1>ESP32 Camera Control</h1>
-  <button class="button" id="up" onmousedown="sendCommand('up')" onmouseup="sendCommand('stop')">Up</button><br>
-  <button class="button" id="left" onmousedown="sendCommand('left')" onmouseup="sendCommand('stop')">Left</button>
-  <button class="button" id="right" onmousedown="sendCommand('right')" onmouseup="sendCommand('stop')">Right</button><br>
-  <button class="button" id="down" onmousedown="sendCommand('down')" onmouseup="sendCommand('stop')">Down</button><br>
-  <div id="stream">
-    <img src="/stream" alt="Camera Stream">
-  </div>
-  <script>
-    function sendCommand(cmd) {
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "/control?cmd=" + cmd, true);
-      xhr.send();
-    }
-  </script>
-</body>
-</html>
-)rawliteral";
-
-
 
 #define PART_BOUNDARY "123456789000000000000987654321"
 
