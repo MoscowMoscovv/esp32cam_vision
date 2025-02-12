@@ -9,8 +9,6 @@
 <body  scroll="no" style="position: fixed; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
 color:rgb(128, 128, 128);
 font-size: xx-large;">
-    <h1 style="text-align:center">
-        PABLO </h1>
     <p style="text-align: center;">
         X: <span id="x_coordinate"> </span>
         Y: <span id="y_coordinate"> </span>
@@ -93,8 +91,8 @@ font-size: xx-large;">
                 
         }
 
-        function is_it_in_the_circle() {
-            var current_radius = Math.sqrt(Math.pow(coord.x - x_orig, 2) + Math.pow(coord.y - y_orig, 2));
+        function is_it_in_the_circle(id) {
+            var current_radius = Math.sqrt(Math.pow(coord.x - center_coords[id].x, 2) + Math.pow(coord.y - center_coords[id].y, 2));
             if (radius >= current_radius) {
                 return true;
             }
@@ -119,7 +117,8 @@ font-size: xx-large;">
             paint = true;
             getPosition(event);
             //todo: insert here check for start joystick_id
-            if (is_it_in_the_circle()) {
+            start_joystick_id = closest_to_mouse_joystick_id()
+            if (is_it_in_the_circle(start_joystick_id)) {
                 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 background();
@@ -150,14 +149,37 @@ font-size: xx-large;">
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 background();
                 var angle_in_degrees, speed;
-                closer_joystic_id=closest_to_mouse_joystick_id();
+                closest_to_mouse_joystick_id();
 
-                x_orig = center_coords[closer_joystic_id].x;
-                y_orig = center_coords[closer_joystic_id].y;
+                x_orig = center_coords[start_joystick_id].x;
+                y_orig = center_coords[start_joystick_id].y;
 
-                not_closer_joystick_id = Number(!closer_joystic_id);
-                joystick(center_coords[not_closer_joystick_id].x, center_coords[not_closer_joystick_id].y);
+                not_start_joystick_id = Number(!start_joystick_id);
+
                 var angle = Math.atan2((coord.y - y_orig), (coord.x - x_orig));
+                
+                if ( typeof event.touches != 'undefined'){
+                    var center_x = center_coords[not_start_joystick_id].x;
+                    var center_y = center_coords[not_start_joystick_id].y;
+                    if (event.touches[1]){
+                        var x = event.touches[1].clientX;
+                        var y = event.touches[1].clientY;
+                        
+                        if (!is_it_in_the_circle(not_start_joystick_id)) { 
+                            angle = Math.atan2((y - center_y), (x- center_x));
+                            x = radius * Math.cos(angle) +center_x;
+                            y = radius * Math.sin(angle) + center_y;
+                        }
+                        joystick(x, y);
+                        
+                    }
+                    else {joystick(center_coords[not_start_joystick_id].x, center_coords[not_start_joystick_id].y);
+                    }
+                }
+                
+                else {joystick(center_coords[not_start_joystick_id].x, center_coords[not_start_joystick_id].y);}
+
+                angle = Math.atan2((coord.y - y_orig), (coord.x - x_orig));
 
                 if (Math.sign(angle) == -1) {
                     angle_in_degrees = Math.round(-angle * 180 / Math.PI);
@@ -167,7 +189,7 @@ font-size: xx-large;">
                 }
 
 
-                if (is_it_in_the_circle()) {
+                if (is_it_in_the_circle(start_joystick_id)) {
                     joystick(coord.x, coord.y);
                     x = coord.x;
                     y = coord.y;
@@ -191,16 +213,16 @@ font-size: xx-large;">
                 document.getElementById("y_coordinate").innerText =y_relative ;
                 document.getElementById("speed").innerText = speed;
                 document.getElementById("angle").innerText = angle_in_degrees;
-                document.getElementById("joystick_id").innerText = closer_joystic_id;
+                document.getElementById("joystick_id").innerText = start_joystick_id;
             }
 
-            setInterval(function(){request = new XMLHttpRequest();
-                request.open('GET','/joystic_pos?xpos='+document.getElementById("x_coordinate").innerText+
-            '&ypos='+document.getElementById("y_coordinate").innerText+
-            '&speed='+document.getElementById("speed").innerText+
-            '&angle='+document.getElementById("angle").innerText+
-            '&joystick_id='+document.getElementById("joystick_id").innerText,false);
-                request.send();},150)
+            // setInterval(function(){request = new XMLHttpRequest();
+            //     request.open('GET','/joystic_pos?xpos='+document.getElementById("x_coordinate").innerText+
+            // '&ypos='+document.getElementById("y_coordinate").innerText+
+            // '&speed='+document.getElementById("speed").innerText+
+            // '&angle='+document.getElementById("angle").innerText+
+            // '&joystick_id='+document.getElementById("joystick_id").innerText,false);
+            //     request.send();},150)
         } 
     </script>
 </body>
