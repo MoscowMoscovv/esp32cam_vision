@@ -123,8 +123,25 @@ font-size: xx-large;">
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 background();
                 joystick(coord.x, coord.y);
-                Draw();
+                joystick(center_coords[Number(!start_joystick_id)].x,center_coords[Number(!start_joystick_id)].y);
+                //Draw();
             }
+            else {                  
+                    var x_orig=center_coords[start_joystick_id].x;
+                    var y_orig=center_coords[start_joystick_id].y;
+
+                    var angle = Math.atan2((coord.y - y_orig), (coord.x - x_orig));
+                    var x = radius * Math.cos(angle) + x_orig;
+                    var y = radius * Math.sin(angle) + y_orig;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    background();
+                    
+                    joystick(x, y);
+                    joystick(center_coords[Number(!start_joystick_id)].x,center_coords[Number(!start_joystick_id)].y);
+                    //Draw();
+                }
+
+            
         }
 
 
@@ -158,7 +175,7 @@ font-size: xx-large;">
 
                 var angle = Math.atan2((coord.y - y_orig), (coord.x - x_orig));
                 
-                if ( typeof event.touches != 'undefined'){
+                if (typeof event.touches != 'undefined'){
                     var center_x = center_coords[not_start_joystick_id].x;
                     var center_y = center_coords[not_start_joystick_id].y;
                     if (event.touches[1]){
