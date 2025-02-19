@@ -77,8 +77,10 @@ void handle_root()
 
 // Отправка данных о температуре на сервер
 void output_joystic_pos(){
-    Serial.println("xpos: "+ server.arg("xpos")+" ypos: "+server.arg("ypos")+" speed " \
-    + server.arg("speed")+ " angle " + server.arg("speed"));
+    Serial.println(" 0speed " + server.arg("0speed")+\
+     " 0angle " + server.arg("0angle")+\
+     " 1speed " + server.arg("1speed")+\
+     " 1angle " + server.arg("1angle"));
     server.send(200);
     //delay(150);
 }
