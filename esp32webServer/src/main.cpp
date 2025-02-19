@@ -15,7 +15,7 @@
  * Макрос для подключение сервера в роли клента сети WiFi к маршрутизатору
  * и также изменением URL с цифрового IP на mDNS для подключения
  */
-#define ESP_CLIENT_MODE
+#define ESP_STATION_MODE
 
 #ifdef ESP_CLIENT_MODE
 
@@ -124,6 +124,7 @@ void setup()
 
 #ifdef ESP_STATION_MODE
     Serial.println("Server was started");
+    Serial.println(local_ip);
 #endif
 
 
