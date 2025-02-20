@@ -11,7 +11,7 @@ const char HTML[] = R"=====(
 color:rgb(128, 128, 128);
 font-size: xx-large;">
     <canvas id="canvas" name="game"></canvas>
-    <img id="stream" src="http://192.168.1.3/stream" 
+    <img id="stream" src="http://192.168.1.2/stream" 
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: -1;" 
     alt="Camera Stream">
   <script>

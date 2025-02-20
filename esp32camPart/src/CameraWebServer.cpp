@@ -1,9 +1,9 @@
 #include "esp_camera.h"
 #include <WiFi.h>
-#include "esp_timer.h"
-#include "img_converters.h"
+//#include "esp_timer.h"
+//#include "img_converters.h"
 #include "Arduino.h"
-#include "fb_gfx.h"
+//#include "fb_gfx.h"
 #include "soc/soc.h" 
 #include "soc/rtc_cntl_reg.h"  
 #include "esp_http_server.h"
@@ -165,7 +165,7 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_UXGA;
+  config.frame_size = FRAMESIZE_SVGA;
   config.pixel_format = PIXFORMAT_JPEG;  // for streaming
   //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
