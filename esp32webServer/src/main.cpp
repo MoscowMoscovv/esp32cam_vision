@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
-
+#include "driver/temp_sensor.h"
 // Для WiFi
 #include <WiFi.h>
 // Для веб-сервера
@@ -66,6 +66,12 @@ int8_t temp = 0;
  */
 
 
+ void initTempSensor(){
+    temp_sensor_config_t temp_sensor = TSENS_CONFIG_DEFAULT();
+    temp_sensor.dac_offset = TSENS_DAC_L2;  // TSENS_DAC_L2 is default; L4(-40°C ~ 20°C), L2(-10°C ~ 80°C), L1(20°C ~ 100°C), L0(50°C ~ 125°C)
+    temp_sensor_set_config(temp_sensor);
+    temp_sensor_start();
+}
 
 // Handle root url (/)
 void handle_root()
@@ -85,18 +91,22 @@ void output_joystic_pos(){
     //delay(150);
 }
 
-
+float result = 0;
 void temp_sens()
-{
-    const char* new_temp_data = String(temp).c_str();
-    server.send(200, "text/plain", String(temp));
-    server.sendContent(String(temp));
+{   
+        temp_sensor_read_celsius(&result);
+        server.send(200, "text/plain", String(result));
+        //delay(100);
+        server.sendContent(String(result));
+
+    
 }
 
 void setup()
 {
     // Передача данных по Serial
     Serial.begin(115200);
+    initTempSensor();
     
 #ifdef ESP_CLIENT_MODE
     // Подключение к существующей сети WiFI
@@ -117,6 +127,7 @@ void setup()
     // Полный код веб-страницы
     server.on("/", handle_root);
     server.on("/joystic_pos",output_joystic_pos);
+    server.on("/temperature", temp_sens);
     // Регистрация событий (event)
 
     // Запуск сервера
