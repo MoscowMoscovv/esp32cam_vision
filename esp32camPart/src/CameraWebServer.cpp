@@ -5,16 +5,15 @@
 #include "Arduino.h"
 #include "fb_gfx.h"
 #include "soc/soc.h" 
-#include "soc/rtc_cntl_reg.h"  
+#include "soc/rtc_cntl_reg.h"
 #include "esp_http_server.h"
-
-
-
+#include <string>
 
 
 
 char* ssid = "ESP32_S3";
 const char* password = "esp32_s3";
+
 
 #define PART_BOUNDARY "123456789000000000000987654321"
 
@@ -23,6 +22,8 @@ static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\nX-Timestamp: %d.%06d\r\n\r\n";
 
 httpd_handle_t stream_httpd = NULL;
+httpd_handle_t fps_httpd = NULL;
+float fps = 0.0;
 
 static esp_err_t stream_handler(httpd_req_t *req) {
   camera_fb_t *fb = NULL;
@@ -31,10 +32,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
   size_t _jpg_buf_len = 0;
   uint8_t *_jpg_buf = NULL;
   char *part_buf[128];
-  static int64_t last_frame = 0;
-  if (!last_frame) {
-    last_frame = esp_timer_get_time();
-  }
+  static int64_t fr_start = 0;
 
   res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
   if (res != ESP_OK) {
@@ -89,34 +87,50 @@ static esp_err_t stream_handler(httpd_req_t *req) {
       break;
     }
     int64_t fr_end = esp_timer_get_time();
+    
+    int64_t frame_time = fr_end - fr_start;
+    fr_start = fr_end;
+    fps = 1000000.0/frame_time;
+    //send_fps_to_second_board(fps);
+    //Serial.println(fps);
 
-    int64_t frame_time = fr_end - last_frame;
-    frame_time /= 1000;
-  
   }
 
   return res;
 }
 
+static esp_err_t fps_handler(httpd_req_t *req) {
+    char fps_str[16];
+    snprintf(fps_str, sizeof(fps_str), "%.2f", fps);
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");  // Разрешить запросы с любого домена
 
-
-void startCameraServer() {
-  httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-  config.server_port = 80;
-  
-  httpd_uri_t stream_uri = {
-    .uri = "/stream",
-    .method = HTTP_GET,
-    .handler = stream_handler,
-    .user_ctx = NULL
-  };
-
-
-  if (httpd_start(&stream_httpd, &config) == ESP_OK) {
-    httpd_register_uri_handler(stream_httpd, &stream_uri);
-  }
+    return httpd_resp_send(req, fps_str, strlen(fps_str));
 }
 
+void startCameraServer() {
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.server_port = 80;
+    
+    httpd_uri_t stream_uri = {
+        .uri = "/stream",
+        .method = HTTP_GET,
+        .handler = stream_handler,
+        .user_ctx = NULL
+    };
+
+    httpd_uri_t fps_uri = {
+        .uri = "/fps",
+        .method = HTTP_GET,
+        .handler = fps_handler,
+        .user_ctx = NULL
+    };
+
+    if (httpd_start(&stream_httpd, &config) == ESP_OK) {
+        httpd_register_uri_handler(stream_httpd, &stream_uri);
+        httpd_register_uri_handler(stream_httpd, &fps_uri);
+    }
+}
 
 
 void setup() {
@@ -165,13 +179,14 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_VGA;
+  config.frame_size = FRAMESIZE_QVGA;
   config.pixel_format = PIXFORMAT_JPEG;  // for streaming
   //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 12;
-  config.fb_count = 1;
+  config.grab_mode = CAMERA_GRAB_LATEST;
+  config.jpeg_quality = 27;
+  config.fb_count = 2;
 
 
   // Camera init
@@ -202,5 +217,7 @@ void setup() {
 }
 
 void loop() {
-  //delay(1);
+  unsigned long currentMillis = millis();
+
+
 }

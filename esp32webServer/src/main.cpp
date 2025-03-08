@@ -74,6 +74,23 @@ int8_t temp = 0;
 }
 
 // Handle root url (/)
+
+float received_fps = 0.0;
+
+void handle_fps() {
+    if (server.method() == HTTP_POST) {  
+        if (server.hasArg("plain")) {
+            received_fps = server.arg("plain").toFloat();  
+            Serial.printf("FPS обновлен: %.2f\n", received_fps);
+            server.send(200, "text/plain", "FPS сохранен");
+        } else {
+            server.send(400, "text/plain", "Ошибка: Нет данных");
+        }
+    } else {  
+        server.send(200, "text/plain", String(received_fps, 2));
+    }
+}
+
 void handle_root()
 {
     server.send(200, "text/html", HTML);
@@ -107,6 +124,7 @@ void setup()
     // Передача данных по Serial
     Serial.begin(115200);
     initTempSensor();
+    WiFi.setSleep(false);
     
 #ifdef ESP_CLIENT_MODE
     // Подключение к существующей сети WiFI
@@ -128,6 +146,7 @@ void setup()
     server.on("/", handle_root);
     server.on("/joystic_pos",output_joystic_pos);
     server.on("/temperature", temp_sens);
+    server.on("/fps", handle_fps);
     // Регистрация событий (event)
 
     // Запуск сервера

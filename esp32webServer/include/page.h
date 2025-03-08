@@ -1,5 +1,4 @@
-const char HTML[] = R"=====(
-<!DOCTYPE html>
+const char HTML[] = R"=====(<!DOCTYPE html>
 <html>
 <head>
     <title>
@@ -10,14 +9,15 @@ const char HTML[] = R"=====(
 <body  scroll="no" style="position: fixed; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
 color:rgb(128, 128, 128);
 font-size: xx-large;">
-    <!-- Элемент для отображения температуры в правом верхнем углу -->
-<div id="temperature" style="position: fixed; top: 10px; right: 10px; background-color: rgba(0, 0, 0, 0.5); color: white; padding: 5px; font-size: 16px; border-radius: 5px;">
-    Загрузка...
-</div>
     <canvas id="canvas" name="game"></canvas>
     <img id="stream" src="http://192.168.1.184/stream" 
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: -1;" 
     alt="Camera Stream">
+    <div id="fps" 
+    style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.5); 
+           color: white; padding: 5px 10px; border-radius: 5px; font-size: large;">
+   FPS: --
+</div>
   <script>
         var canvas, ctx;
 
@@ -239,20 +239,26 @@ font-size: xx-large;">
             send_req();
             }
 
-        // function getTemperature() {
-        //     fetch('http://192.168.1.1/temperature')
-        //         .then(response => response.text())
-        //         .then(data => {
-                    
-        //             document.getElementById('temperature').textContent = 'Temperature: ' + data + '°C';
-        //         })
-        //         .catch(error => {
-        //             document.getElementById('temperature').textContent = 'Error';
-        //         });
-        // }
+            async function fetchFPS() {
+                console.log("Fetching FPS...");  // Логирование
+                try {
+                    const response = await fetch(`http://192.168.1.184/fps?t=${Date.now()}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const fps = await response.text();
+                    console.log("FPS received:", fps);  // Логирование
+                    document.getElementById('fps').textContent = "FPS: " + fps;
+                } catch (error) {
+                    console.error('Error fetching FPS:', error);
+                    document.getElementById('fps').textContent = 'FPS: Error';
+                }
+            }
 
-        // setInterval(getTemperature, 1000);
+setInterval(fetchFPS, 2000);  // Запрос каждые 2 секунды
 
+        setInterval(fetchFPS, 1000);
+                
         
     </script>
 </body>
