@@ -13,11 +13,6 @@ font-size: xx-large;">
     <img id="stream" src="http://192.168.1.184/stream" 
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: -1;" 
     alt="Camera Stream">
-    <div id="fps" 
-    style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.5); 
-           color: white; padding: 5px 10px; border-radius: 5px; font-size: large;">
-   FPS: --
-</div>
   <script>
         var canvas, ctx;
 
@@ -36,12 +31,6 @@ font-size: xx-large;">
             document.addEventListener('touchcancel', stopDrawing, { passive: false });
             document.addEventListener('touchmove', Draw, { passive: false });
             window.addEventListener('resize', resize);
-            // for(id =0;id<= center_coords.length;id++){
-            //     document.getElementById("x_coordinate_"+id).innerText = 0;
-            //     document.getElementById("y_coordinate_"+id).innerText = 0;
-            //     document.getElementById("speed_"+id).innerText = 0;
-            //     document.getElementById("angle_"+id).innerText = 0;
-            // }
         });
 
         
@@ -239,28 +228,7 @@ font-size: xx-large;">
             send_req();
             }
 
-            async function fetchFPS() {
-                console.log("Fetching FPS...");  // Логирование
-                try {
-                    const response = await fetch(`http://192.168.1.184/fps?t=${Date.now()}`);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    const fps = await response.text();
-                    console.log("FPS received:", fps);  // Логирование
-                    document.getElementById('fps').textContent = "FPS: " + fps;
-                } catch (error) {
-                    console.error('Error fetching FPS:', error);
-                    document.getElementById('fps').textContent = 'FPS: Error';
-                }
-            }
-
-setInterval(fetchFPS, 2000);  // Запрос каждые 2 секунды
-
-        setInterval(fetchFPS, 1000);
-                
-        
+ 
     </script>
 </body>
-</html><br>
-)=====";
+</html><br>)=====";

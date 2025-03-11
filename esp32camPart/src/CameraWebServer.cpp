@@ -8,11 +8,12 @@
 #include "soc/rtc_cntl_reg.h"
 #include "esp_http_server.h"
 #include <string>
+// #include "driver/temp_sens.h"
 
+#define SERIAL_DEBUG_MODE
 
-
-char* ssid = "ESP32_S3";
-const char* password = "esp32_s3";
+char* ssid = "HUAWEI P40 lite";
+const char* password = "Yan2006yany";
 
 
 #define PART_BOUNDARY "123456789000000000000987654321"
@@ -22,8 +23,10 @@ static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\nX-Timestamp: %d.%06d\r\n\r\n";
 
 httpd_handle_t stream_httpd = NULL;
-httpd_handle_t fps_httpd = NULL;
+
+#ifdef SERIAL_DEBUG_MODE
 float fps = 0.0;
+#endif
 
 static esp_err_t stream_handler(httpd_req_t *req) {
   camera_fb_t *fb = NULL;
@@ -92,21 +95,22 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     fr_start = fr_end;
     fps = 1000000.0/frame_time;
     //send_fps_to_second_board(fps);
-    //Serial.println(fps);
 
+    #ifdef SERIAL_DEBUG_MODE
+    if(fps<25){
+      //temp_sensor_read_celsius(&temp_handler);
+      
+      Serial.print("low fps: ");
+      Serial.print(fps);
+      Serial.print(" temp: ");
+      Serial.println(temperatureRead());    
+    }
+    #endif
   }
 
   return res;
 }
 
-static esp_err_t fps_handler(httpd_req_t *req) {
-    char fps_str[16];
-    snprintf(fps_str, sizeof(fps_str), "%.2f", fps);
-    httpd_resp_set_type(req, "text/plain");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");  // Разрешить запросы с любого домена
-
-    return httpd_resp_send(req, fps_str, strlen(fps_str));
-}
 
 void startCameraServer() {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -119,21 +123,21 @@ void startCameraServer() {
         .user_ctx = NULL
     };
 
-    httpd_uri_t fps_uri = {
-        .uri = "/fps",
-        .method = HTTP_GET,
-        .handler = fps_handler,
-        .user_ctx = NULL
-    };
 
     if (httpd_start(&stream_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(stream_httpd, &stream_uri);
-        httpd_register_uri_handler(stream_httpd, &fps_uri);
     }
 }
+// void initTempSensor(){
+//     temp_sensor_config_t temp_sensor = TSENS_CONFIG_DEFAULT();
+//     temp_sensor.dac_offset = TSENS_DAC_L2;  // TSENS_DAC_L2 is default; L4(-40°C ~ 20°C), L2(-10°C ~ 80°C), L1(20°C ~ 100°C), L0(50°C ~ 125°C)
+//     temp_sensor_set_config(temp_sensor);
+//     temp_sensor_start();
+// }
 
 
 void setup() {
+  // initTempSensor();
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
  
   Serial.begin(115200);
@@ -180,9 +184,7 @@ void setup() {
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.frame_size = FRAMESIZE_QVGA;
-  config.pixel_format = PIXFORMAT_JPEG;  // for streaming
-  //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
-  config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+  config.pixel_format = PIXFORMAT_JPEG;
   config.fb_location = CAMERA_FB_IN_PSRAM;
   config.grab_mode = CAMERA_GRAB_LATEST;
   config.jpeg_quality = 27;
@@ -196,10 +198,10 @@ void setup() {
     return;
   }
   // Wi-Fi connection
-  IPAddress local_IP(192,168,1,184);
-  IPAddress gateway(192, 168, 1, 1);
-  IPAddress subnet(255, 255, 0, 0);
-  WiFi.config(local_IP,gateway,subnet);
+  // IPAddress local_IP(192,168,1,184);
+  // IPAddress gateway(192, 168, 1, 1);
+  // IPAddress subnet(255, 255, 0, 0);
+  // WiFi.config(local_IP,gateway,subnet);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -215,6 +217,8 @@ void setup() {
   // Start streaming web server
   startCameraServer();
 }
+
+ 
 
 void loop() {
   unsigned long currentMillis = millis();
