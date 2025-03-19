@@ -1,0 +1,93 @@
+#include <Arduino.h>
+#include <Wire.h>
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESPmDNS.h>
+#include "page.h"
+
+WebServer server(80);
+
+
+/* по какой-то причине не могу создать класс с приватными методами чтобы он нормально обрабатывал server,
+поэтому, отделяю "приватные" функции и переменные внутреннего механизма класса таким образом. */
+
+/* и да, я в курсе, что к этим функциям еще можно получить доступ из соседних файлов, но так есть хоть какое-то разделение*/
+namespace private_server_functions{
+
+float received_fps = 0.0;
+unsigned long time_p = 0;
+int8_t temp = 0;
+float received_fps = 0.0;
+float result = 0;
+
+/*  обработка главной страницы: обновление html-страницы каждые N мс (выставил 500)
+ (не влияет на кол-во фпс) */
+void handle_root()
+{
+    server.send(200, "text/html", HTML);
+    
+    delay(500);
+}
+
+/*  обработчик входящей на uri /joystic_pos информации, вывод информации о положении джойстиков */
+void output_joystic_pos(){
+    Serial.println(" 0speed " + server.arg("0speed")+\
+     " 0angle " + server.arg("0angle")+\
+     " 1speed " + server.arg("1speed")+\
+     " 1angle " + server.arg("1angle"));
+    server.send(200);
+    
+}
+
+/*  обработчик uri /temp_sens, отправляет температуру процессора каждый раз, когда приходит запрос */
+void temp_sens(){   
+        server.send(200, "text/plain", String(temperatureRead()));
+        server.sendContent(String(temperatureRead()));
+}
+}
+
+
+
+/* публичные функции */
+
+/* выставляет все хендлеры и запускает сервер, возвращает ссылку на него, тк в loop
+ нужно положить server.handleClient()*/
+
+WebServer& start_server()
+{
+    server.on("/", private_server_functions::handle_root);
+    server.on("/joystic_pos",private_server_functions::output_joystic_pos);
+    server.on("/temperature", private_server_functions::temp_sens);
+
+    
+    server.begin();
+    return server;
+
+}
+
+/* подключается к заданной сети вайфай */
+void start_WIFI_in_client_mode(const char *ssid, const char *password, const char* nameDNS)
+{
+    
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println("");
+    Serial.println("WiFi connected");
+}
+
+/* создает точку вай-фай */
+void start_WIFI_in_station_mode(const char *ssid,
+                                const char *password,
+                                IPAddress local_ip = IPAddress(192, 168, 1, 1),
+                                IPAddress gateway= IPAddress(192, 168, 1, 1),
+                                IPAddress subnet= IPAddress(255, 255, 255, 0)
+){
+    WiFi.setSleep(false);
+    WiFi.softAP(ssid, password);
+    WiFi.softAPConfig(local_ip, gateway, subnet);
+    Serial.println("Create wifi station: " + String(ssid));
+    
+}
