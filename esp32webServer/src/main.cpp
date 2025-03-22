@@ -8,6 +8,16 @@
  */
 #define ESP_STATION_MODE
 
+void enterface_handler_example(String speed0, String angle0, String speed1, String angle1){
+    Serial.println(" 0speed " + speed0+\
+        " 0angle " + angle0+\
+        " 1speed " + speed1+\
+        " 1angle " + angle1);
+}
+
+
+
+
 
 #ifdef ESP_CLIENT_MODE
 
@@ -50,7 +60,21 @@ void setup()
         
     #endif
 
-WebServer& server = start_server();
+    // принимает объект std::function<void(String,String,String,String)>
+    // (server.arg("0speed"),server.arg("0angle"),server.arg("1speed"),server.arg("1angle"));
+
+    /*  
+        функция будет вызываться при взаимодействии с джойстиками:
+        степень отдаления джойстика от центра 0 - 100
+        угол отклонения джойстика - для 0angle от 0 до 360, для 1angle - 180 или 360 
+        
+        Функция вызывается при изменения положения джойстика: если джойстик находится не в центре 
+        и не двигается - функция не вызывается.
+        Если джойстик отпустили и он вернулся в центр - функция вызовется с аргументом speed = 0
+    */
+
+
+    WebServer& server = start_server(enterface_handler_example);
 
 }
 

@@ -6,14 +6,13 @@
 #include "page.h"
 
 WebServer server(80);
-
+std::function<void(String, String, String, String)> interface_feedback_handler_insides;
 
 /* по какой-то причине не могу создать класс с приватными методами чтобы он нормально обрабатывал переменную типа WebServer,
 поэтому, отделяю "приватные" функции и переменные внутреннего механизма класса таким образом. */
 
 /* к этим функциям еще можно получить доступ из соседних файлов, но так есть хоть какое-то разделение*/
 namespace private_server_functions{
-
 float received_fps = 0.0;
 unsigned long time_p = 0;
 int8_t temp = 0;
@@ -29,13 +28,9 @@ void handle_root()
 }
 
 /*  обработчик входящей на uri /joystic_pos информации, вывод информации о положении джойстиков */
-void output_joystic_pos(){
-    Serial.println(" 0speed " + server.arg("0speed")+\
-     " 0angle " + server.arg("0angle")+\
-     " 1speed " + server.arg("1speed")+\
-     " 1angle " + server.arg("1angle"));
+void interface_feedback_handler(){
+    interface_feedback_handler_insides(server.arg("0speed"),server.arg("0angle"),server.arg("1speed"),server.arg("1angle"));
     server.send(200);
-    
 }
 
 /*  обработчик uri /temp_sens, отправляет температуру процессора каждый раз, когда приходит запрос */
@@ -52,10 +47,15 @@ void temp_sens(){
 /* выставляет все хендлеры и запускает сервер, возвращает ссылку на него, тк в loop
  нужно положить server.handleClient()*/
 
-WebServer& start_server()
+WebServer& start_server(std::function<void(String, String, String, String)> fn)
 {
+    if (!fn){
+        Serial.println("[ERROR] you have to give corrrect std::function<void(String, String, String, String)> function");
+        throw(ESP_ERR_INVALID_ARG);
+    }
+    interface_feedback_handler_insides = fn;
     server.on("/", private_server_functions::handle_root);
-    server.on("/joystic_pos",private_server_functions::output_joystic_pos);
+    server.on("/joystic_pos",private_server_functions::interface_feedback_handler);
     server.on("/temperature", private_server_functions::temp_sens);
 
     
