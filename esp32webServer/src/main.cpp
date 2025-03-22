@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "page.h"
+//#include "page.h"
 #include <mainESPwebServer.h>
 
 /* 
@@ -11,8 +11,6 @@
 
 #ifdef ESP_CLIENT_MODE
 
-/* SSID & Password */
-
 const char* ssid = "HUAWEI P40 lite";     
 
 const char* password = "Yan2006yany"; 
@@ -21,8 +19,8 @@ const char* nameDNS = "esp32-dashboard";
 
 #endif
 
-#ifdef ESP_STATION_MODE
 
+#ifdef ESP_STATION_MODE
 
 const char *ssid = "ESP32_S3";     
 const char *password = "esp32_s3"; 
@@ -40,17 +38,17 @@ void setup()
 
     Serial.begin(115200);
     
-#ifdef ESP_CLIENT_MODE
-    
-    start_WIFI_in_client_mode(ssid,password,nameDNS);
-    
-#endif
+    #ifdef ESP_CLIENT_MODE
+        
+        start_WIFI_in_client_mode(ssid,password,nameDNS);
+        
+    #endif
 
-#ifdef ESP_STATION_MODE
+    #ifdef ESP_STATION_MODE
 
-    start_WIFI_in_station_mode(ssid,password,local_ip,gateway,subnet);
-    
-#endif
+        start_WIFI_in_station_mode(ssid,password,local_ip,gateway,subnet);
+        
+    #endif
 
 WebServer& server = start_server();
 

@@ -2,17 +2,20 @@ const char HTML[] = R"=====(<!DOCTYPE html>
 <html>
 <head>
     <title>
-        Mousebot
+        mobile platform web interface
     </title>
     <meta name="viewport" content="user-scalable=no">
 </head>
 <body  scroll="no" style="position: fixed; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
 color:rgb(128, 128, 128);
 font-size: xx-large;">
-    <canvas id="canvas" name="game"></canvas>
+    <canvas id="canvas"></canvas>
     <img id="stream" src="http://192.168.1.184/stream" 
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: -1;" 
     alt="Camera Stream">
+    <div id="temperature" style="position: fixed; top: 10px; right: 10px; background-color: rgba(0, 0, 0, 0.5); color: white; padding: 5px; font-size: 16px; border-radius: 5px;">
+        Загрузка...
+    </div>
   <script>
         var canvas, ctx;
 
@@ -30,7 +33,15 @@ font-size: xx-large;">
             document.addEventListener('touchend', stopDrawing, { passive: false });
             document.addEventListener('touchcancel', stopDrawing, { passive: false });
             document.addEventListener('touchmove', Draw, { passive: false });
+            document.addEventListener('keydown',startDrawingKeyboard,{passive: false});
+            document.addEventListener('keyup',stopDrawingKeyboard,{passive:false});
             window.addEventListener('resize', resize);
+            // for(id =0;id<= center_coords.length;id++){
+            //     document.getElementById("x_coordinate_"+id).innerText = 0;
+            //     document.getElementById("y_coordinate_"+id).innerText = 0;
+            //     document.getElementById("speed_"+id).innerText = 0;
+            //     document.getElementById("angle_"+id).innerText = 0;
+            // }
         });
 
         
@@ -98,44 +109,96 @@ font-size: xx-large;">
         }}
 
         function joystick(x, y, id) {
-    x_orig = center_coords[id].x;
-    y_orig = center_coords[id].y;
-    
-    let dx = x - x_orig;
-    let dy = y - y_orig;
-    let distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance > radius) {
-        x = x_orig + (dx / distance) * radius;
-        y = y_orig + (dy / distance) * radius;
-    }
+            x_orig = center_coords[id].x;
+            y_orig = center_coords[id].y;
+            
+            let dx = x - x_orig;
+            let dy = y - y_orig;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > radius) {
+                x = x_orig + (dx / distance) * radius;
+                y = y_orig + (dy / distance) * radius;
+            }
 
-    draw_circle(x, y);
+            draw_circle(x, y);
 
-    let speed = Math.round(100 * distance / radius);
-    let angle = Math.atan2(dy, dx);
-    let angle_in_degrees = Math.round(angle < 0 ? -angle * 180 / Math.PI : 360 - angle * 180 / Math.PI);
+            let speed = Math.round(100 * distance / radius);
+            let angle = Math.atan2(dy, dx);
+            let angle_in_degrees = Math.round(angle < 0 ? -angle * 180 / Math.PI : 360 - angle * 180 / Math.PI);
 
-    if (speed > 100) speed = 100;
+            if (speed > 100) speed = 100;
 
 
-    map_req.set('speed'+id,speed);
-    map_req.set('angle'+id,angle_in_degrees);
-    //document.getElementById(`x_coordinate_${id}`).innerText = Math.round(dx);
-    //document.getElementById(`y_coordinate_${id}`).innerText = Math.round(dy);
-    //document.getElementById(`speed_${id}`).innerText = speed;
-    //document.getElementById(`angle_${id}`).innerText = angle_in_degrees;
+            map_req.set('speed'+id,speed);
+            map_req.set('angle'+id,angle_in_degrees);
+            //document.getElementById(`x_coordinate_${id}`).innerText = Math.round(dx);
+            //document.getElementById(`y_coordinate_${id}`).innerText = Math.round(dy);
+            //document.getElementById(`speed_${id}`).innerText = speed;
+            //document.getElementById(`angle_${id}`).innerText = angle_in_degrees;
 }
 
         let coord = { x: 0, y: 0 };
         let paint = false
+        buttons_pressed=[];
+
+        function drawKeyboard(){
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            background();
+            w = buttons_pressed.includes('KeyW');
+            a = buttons_pressed.includes('KeyA');
+            s = buttons_pressed.includes('KeyS');
+            d = buttons_pressed.includes('KeyD');
+            q = buttons_pressed.includes('KeyQ');
+            e = buttons_pressed.includes('KeyE');
+            x1 = center_coords[0].x;
+            y1 = center_coords[0].y;
+            x2 = center_coords[1].x;
+            y2 = center_coords[1].y;
+            if (w){ y1 -= radius}
+            if (a){ x1 -= radius}
+            if (s){ y1 += radius}
+            if (d){ x1 += radius}
+            if (q){ x2 -= radius}
+            if (e){ x2 += radius}
+            joystick(x1,y1,0);
+            joystick(x2,y2,1);
+        }
+
+        function startDrawingKeyboard(event){
+            if (!event.repeat){
+                if (['KeyW','KeyA','KeyS','KeyD','KeyE','KeyQ'].includes(event.code) && !buttons_pressed.includes(event.code)){
+                    // console.log('WASD button pushed');
+                    buttons_pressed.push(event.code);
+                    console.log(buttons_pressed);
+                    drawKeyboard();
+
+                }
+            }
+        }
+
+        function stopDrawingKeyboard(event){
+            if (buttons_pressed.includes(event.code)){
+                // console.log('WASD button released');
+                buttons_pressed.splice(buttons_pressed.indexOf(event.code),1);
+                console.log(buttons_pressed);
+                drawKeyboard();
+            }
+            
+        }
+            
+
+        
+
 
         function getPosition(event) {
-            var mouse_x = event.clientX || event.touches[0].clientX;
-            var mouse_y = event.clientY || event.touches[0].clientY;
-            coord.x = mouse_x - canvas.offsetLeft;
-            coord.y = mouse_y - canvas.offsetTop;
-                
+            
+                var mouse_x = event.clientX || event.touches[0].clientX;
+                var mouse_y = event.clientY || event.touches[0].clientY;
+                coord.x = mouse_x - canvas.offsetLeft;
+                coord.y = mouse_y - canvas.offsetTop;
+            
+            
         }
 
         
@@ -228,7 +291,7 @@ font-size: xx-large;">
             send_req();
             }
 
- 
+             
     </script>
 </body>
 </html><br>)=====";
