@@ -1,7 +1,4 @@
 #include "mainESPWebServer.h"
-#include <WebServer.h>
-
-
 
 WebServer server(80);
 std::function<void(String, String, String, String)> interface_feedback_handler_insides;
@@ -73,8 +70,7 @@ void start_WIFI_in_station_mode(const char *ssid,
                                 const char *password,
                                 IPAddress local_ip = IPAddress(192, 168, 1, 1),
                                 IPAddress gateway= IPAddress(192, 168, 1, 1),
-                                IPAddress subnet= IPAddress(255, 255, 255, 0)
-){
+                                IPAddress subnet= IPAddress(255, 255, 255, 0)){
     WiFi.setSleep(false);
     WiFi.softAP(ssid, password);
     WiFi.softAPConfig(local_ip, gateway, subnet);

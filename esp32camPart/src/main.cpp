@@ -24,7 +24,7 @@ void setup() {
 
   // 2й параметр - качество изображения jpeg, 0 <= КАЧЕСТВО <= 63
   // меньше число - больше качество
-  // рекомендуемое значение - ~20+
+  // рекомендуемое значение - ~20+ при ~10 будет stack overflow на httpd
 
   Serial.println("starting camera init");
   camera_init(FRAMESIZE_QVGA,27);

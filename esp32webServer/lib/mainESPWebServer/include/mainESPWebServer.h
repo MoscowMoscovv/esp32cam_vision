@@ -8,18 +8,28 @@
 
 #include "page.h"
 
+#ifndef MAIN_ESP_WEB_SERVER
+#define MAIN_ESP_WEB_SERVER
+
+WebServer& start_server(std::function<void(String, String, String, String)> fn);
+
+void handle_root();
+
+void interface_feedback_handler();
+
+void temp_sens();
 
 WebServer& start_server(std::function<void(String, String, String, String)> fn);
 
 void start_WIFI_in_client_mode(const char *ssid, const char *password, const char* nameDNS);
 
-void handleClient();
-
-
 void start_WIFI_in_station_mode(const char *ssid,
     const char *password,
-    IPAddress local_ip, //= IPAddress(192, 168, 1, 1),
-    IPAddress gateway,  //= IPAddress(192, 168, 1, 1),
-    IPAddress subnet //= IPAddress(255, 255, 255, 0)
+    IPAddress local_ip,
+    IPAddress gateway,
+    IPAddress subnet
 );
 
+void handleClient();
+
+#endif
