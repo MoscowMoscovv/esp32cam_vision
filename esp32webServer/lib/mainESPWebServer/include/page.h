@@ -163,6 +163,7 @@ font-size: xx-large;">
             if (e){ x2 += radius}
             joystick(x1,y1,0);
             joystick(x2,y2,1);
+            send_req();
         }
 
         function startDrawingKeyboard(event){

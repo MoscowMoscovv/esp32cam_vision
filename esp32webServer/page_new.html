@@ -163,6 +163,7 @@ font-size: xx-large;">
             if (e){ x2 += radius}
             joystick(x1,y1,0);
             joystick(x2,y2,1);
+            send_req();
         }
 
         function startDrawingKeyboard(event){
@@ -295,7 +296,6 @@ font-size: xx-large;">
             fetch('http://192.168.1.1/temperature')
                 .then(response => response.text())
                 .then(data => {
-                    
                     document.getElementById('temperature').textContent = 'Temperature: ' + data + '°C';
                 })
                 .catch(error => {

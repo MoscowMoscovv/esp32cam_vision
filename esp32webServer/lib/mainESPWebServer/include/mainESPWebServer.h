@@ -6,10 +6,11 @@
 #include <Wire.h>
 #include <WiFi.h>
 
-#include "page.h"
-
 #ifndef MAIN_ESP_WEB_SERVER
 #define MAIN_ESP_WEB_SERVER
+
+#include "page.h"
+
 
 WebServer& start_server(std::function<void(String, String, String, String)> fn);
 
