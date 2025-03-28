@@ -290,7 +290,20 @@ font-size: xx-large;">
 
             send_req();
             }
+        
+        function getTemperature() {
+            fetch('http://192.168.1.1/temperature')
+                .then(response => response.text())
+                .then(data => {
+                    
+                    document.getElementById('temperature').textContent = 'Temperature: ' + data + '°C';
+                })
+                .catch(error => {
+                    document.getElementById('temperature').textContent = 'Error';
+                });
+        }
 
+        setInterval(getTemperature, 1000);
              
     </script>
 </body>
