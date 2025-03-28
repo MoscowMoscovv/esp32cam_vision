@@ -1,18 +1,13 @@
-#include <Arduino.h>
-#include <Wire.h>
-#include <WiFi.h>
+#include "mainESPWebServer.h"
 #include <WebServer.h>
-#include <ESPmDNS.h>
-#include "page.h"
+
+
 
 WebServer server(80);
 std::function<void(String, String, String, String)> interface_feedback_handler_insides;
 
-/* по какой-то причине не могу создать класс с приватными методами чтобы он нормально обрабатывал переменную типа WebServer,
-поэтому, отделяю "приватные" функции и переменные внутреннего механизма класса таким образом. */
+/* по какой-то причине не могу создать класс с приватными методами чтобы он нормально обрабатывал переменную типа WebServer */
 
-/* к этим функциям еще можно получить доступ из соседних файлов, но так есть хоть какое-то разделение*/
-namespace private_server_functions{
 float received_fps = 0.0;
 unsigned long time_p = 0;
 int8_t temp = 0;
@@ -38,11 +33,7 @@ void temp_sens(){
         server.send(200, "text/plain", String(temperatureRead()));
         server.sendContent(String(temperatureRead()));
 }
-}
 
-
-
-/* публичные функции */
 
 /* выставляет все хендлеры и запускает сервер, возвращает ссылку на него, тк в loop
  нужно положить server.handleClient()*/
@@ -54,9 +45,9 @@ WebServer& start_server(std::function<void(String, String, String, String)> fn)
         throw(ESP_ERR_INVALID_ARG);
     }
     interface_feedback_handler_insides = fn;
-    server.on("/", private_server_functions::handle_root);
-    server.on("/joystic_pos",private_server_functions::interface_feedback_handler);
-    server.on("/temperature", private_server_functions::temp_sens);
+    server.on("/", handle_root);
+    server.on("/joystic_pos",interface_feedback_handler);
+    server.on("/temperature", temp_sens);
 
     
     server.begin();
@@ -89,4 +80,10 @@ void start_WIFI_in_station_mode(const char *ssid,
     WiFi.softAPConfig(local_ip, gateway, subnet);
     Serial.println("Create wifi station: " + String(ssid));
     
+}
+
+
+
+void  handleClient(){
+    server.handleClient();
 }

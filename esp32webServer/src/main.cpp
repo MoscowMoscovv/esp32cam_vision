@@ -1,6 +1,6 @@
 #include <Arduino.h>
 //#include "page.h"
-#include <mainESPwebServer.h>
+#include <mainESPWebServer.h>
 
 /* 
  * Макрос для подключение сервера в роли клента сети WiFi к маршрутизатору
@@ -40,6 +40,7 @@ IPAddress local_ip(192, 168, 1, 1);
 IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);
 
+
 #endif
 
 
@@ -77,8 +78,8 @@ void setup()
     WebServer& server = start_server(enterface_handler_example);
 
 }
-
+ 
 void loop()
 {
-    server.handleClient();
+    handleClient();
 }
