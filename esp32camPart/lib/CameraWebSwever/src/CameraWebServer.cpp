@@ -119,6 +119,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     {
         // задаем дефолтную конфигурацию сервера
         httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+        //config.stack_size = 8192;
         config.server_port = 80;
 
         // привязываем хендлеры к uri

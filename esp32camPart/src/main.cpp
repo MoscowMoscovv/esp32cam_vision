@@ -16,15 +16,18 @@
 char* ssid = "ESP32_S3";
 const char* password = "esp32_s3";
 
+
+
 void setup() {
+  //esp_log_level_set("*",ESP_LOG_ERROR);
   Serial.begin(115200);
 
   // 2й параметр - качество изображения jpeg, 0 <= КАЧЕСТВО <= 63
   // меньше число - больше качество
-  // рекомендуемое значение - ~10+
+  // рекомендуемое значение - ~20+
 
   Serial.println("starting camera init");
-  camera_init(FRAMESIZE_QVGA,10);
+  camera_init(FRAMESIZE_QVGA,27);
 
   IPAddress local_IP(192,168,1,184);// стрим будет по uri  http://<local_IP>/stream
   
