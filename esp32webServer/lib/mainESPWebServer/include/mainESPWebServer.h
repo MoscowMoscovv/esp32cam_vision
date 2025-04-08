@@ -12,7 +12,6 @@
 #include "page.h"
 
 
-WebServer& start_server(std::function<void(String, String, String, String)> fn);
 
 void handle_root();
 
@@ -20,6 +19,9 @@ void interface_feedback_handler();
 
 void temp_sens();
 
+
+
+// функции-интерфейс
 WebServer& start_server(std::function<void(String, String, String, String)> fn);
 
 void start_WIFI_in_client_mode(const char *ssid, const char *password, const char* nameDNS);
