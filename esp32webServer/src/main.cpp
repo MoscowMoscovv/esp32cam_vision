@@ -8,15 +8,45 @@
  */
 #define ESP_STATION_MODE
 
-void enterface_handler_example(String speed0, String angle0, String speed1, String angle1){
-    Serial.println(" 0speed " + speed0+\
-        " 0angle " + angle0+\
-        " 1speed " + speed1+\
-        " 1angle " + angle1);
+void enterface_handler_example(int speed0, int angle0, int speed1, int angle1){
+    Serial.print(" 0speed ");
+    Serial.println(speed0);
+    Serial.print(" 0angle ");
+    Serial.println(angle0);
+    Serial.print(" 1speed ");
+    Serial.println(speed1);
+    Serial.print(" 1angle ");
+    Serial.println(angle1);
+    Serial.println("---------------");
 }
+class MovementData{
+    public:
+    bool omni_mode;
+    int angle;
+    int speed;
 
+    void commands_passer(int speed0, int angle0, int speed1, int angle1){
+        Serial.println("RECEIVED JOYSTIC POS");
+        omni_mode = speed0 > 0;
+        Serial.println("omni mode checked");
+        if (omni_mode) {
+            Serial.println("omni mode case");
+            angle = int((angle0 + 22.5) / 45) % 8;
+            speed = speed0;
+            return;}
+        else {
+            Serial.println("not ommi mode case");
+            angle = angle1/180 - 1;
+            speed = speed1;
+        }
+        /* тут нужно вызывать команды для двигателя */
+    }
 
-
+    void full_stop(){
+        speed = 0;
+        /* тут нужно вызывать команды для двигателя */
+    }
+};
 
 
 #ifdef ESP_CLIENT_MODE
@@ -34,6 +64,7 @@ const char* nameDNS = "esp32-dashboard";
 
 const char *ssid = "ESP32_S3";     
 const char *password = "esp32_s3"; 
+MovementData movement;
 
 
 IPAddress local_ip(192, 168, 1, 1);
@@ -48,7 +79,7 @@ void setup()
 {
 
     Serial.begin(115200);
-    
+    Serial.println("Starting Server");
     #ifdef ESP_CLIENT_MODE
         
         start_WIFI_in_client_mode(ssid,password,nameDNS);
@@ -61,7 +92,7 @@ void setup()
         
     #endif
 
-    // принимает объект std::function<void(String,String,String,String)>
+    // принимает объект std::function<void(int,int,int,int)>
     // (server.arg("0speed"),server.arg("0angle"),server.arg("1speed"),server.arg("1angle"));
 
     /*  
@@ -73,9 +104,9 @@ void setup()
         и не двигается - функция не вызывается.
         Если джойстик отпустили и он вернулся в центр - функция вызовется с аргументом speed = 0
     */
-
-
-    WebServer& server = start_server(enterface_handler_example);
+    Serial.println("Starting Server");
+    WebServer& server = start_server([movementPtr = &movement](int s0,int a0, int s1,int a1){movementPtr -> commands_passer(s0, a0, s1, a1);},
+        [](){Serial.println("wifi disconected");});
 
 }
  

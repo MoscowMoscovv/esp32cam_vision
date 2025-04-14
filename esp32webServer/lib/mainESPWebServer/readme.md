@@ -119,7 +119,8 @@ void handle_root();
 ```
 Функция обработки /temp_sens
 ```C
-/** \brief  обработчик uri /temp_sens, отправляет температуру процессора каждый раз, когда приходит запрос 
+/** 
+ * \brief  обработчик uri /temp_sens, отправляет температуру процессора каждый раз, когда приходит запрос 
  *  \return None 
  **/
 void temp_sens();
@@ -127,7 +128,8 @@ void temp_sens();
 
 Функция обработки /joystic_pos
 ```C
-/** \brief обработчик входящей на uri /joystic_pos информация, вызов передаваемой в StartServer функции
+/** 
+ * \brief обработчик входящей на uri /joystic_pos информация, вызов передаваемой в StartServer функции
  *  \return None
 */
 void interface_feedback_handler();
