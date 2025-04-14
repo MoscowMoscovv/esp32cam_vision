@@ -22,24 +22,35 @@ void enterface_handler_example(int speed0, int angle0, int speed1, int angle1){
 class MovementData{
     public:
     bool omni_mode;
-    int angle;
-    int speed;
+    int8_t sector;
+    int8_t speed;
 
     void commands_passer(int speed0, int angle0, int speed1, int angle1){
-        Serial.println("RECEIVED JOYSTIC POS");
+        // Serial.println("RECEIVED JOYSTIC POS");
         omni_mode = speed0 > 0;
-        Serial.println("omni mode checked");
+        
+        // Serial.println("omni mode checked");
         if (omni_mode) {
-            Serial.println("omni mode case");
-            angle = int((angle0 + 22.5) / 45) % 8;
+            // Serial.println("omni mode case");
+            sector = int((angle0 + 22.5) / 45) % 8;
             speed = speed0;
-            return;}
+            }
         else {
-            Serial.println("not ommi mode case");
-            angle = angle1/180 - 1;
-            speed = speed1;
+            // Serial.println("not ommi mode case");
+            sector = angle1/180 - 1;
+            speed = speed1; 
         }
-        /* тут нужно вызывать команды для двигателя */
+        
+        #ifdef SERIAL_DEBUG
+        Serial.print("omni mode:");
+        Serial.println(omni_mode);
+
+        Serial.print("speed: ");
+        Serial.println(speed);
+        Serial.print("sector: ");
+        Serial.println(sector);
+        Serial.println("-----------------------");
+        #endif
     }
 
     void full_stop(){
@@ -79,7 +90,9 @@ void setup()
 {
 
     Serial.begin(115200);
-    Serial.println("Starting Server");
+
+   
+
     #ifdef ESP_CLIENT_MODE
         
         start_WIFI_in_client_mode(ssid,password,nameDNS);
@@ -104,7 +117,9 @@ void setup()
         и не двигается - функция не вызывается.
         Если джойстик отпустили и он вернулся в центр - функция вызовется с аргументом speed = 0
     */
+    #ifdef SERIAL_DEBUG
     Serial.println("Starting Server");
+    #endif
     WebServer& server = start_server([movementPtr = &movement](int s0,int a0, int s1,int a1){movementPtr -> commands_passer(s0, a0, s1, a1);},
         [](){Serial.println("wifi disconected");});
 

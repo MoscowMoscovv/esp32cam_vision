@@ -9,6 +9,8 @@
 #ifndef MAIN_ESP_WEB_SERVER
 #define MAIN_ESP_WEB_SERVER
 
+#define SERIAL_DEBUG
+
 #include "page.h"
 
 

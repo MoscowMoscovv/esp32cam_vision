@@ -10,15 +10,17 @@ float received_fps = 0.0;
 unsigned long time_p = 0;
 int8_t temp = 0;
 float result = 0;
-WiFiClient wifiClient;
+bool clientConnected = false;
 
 /*  обработка главной страницы: обновление html-страницы каждые N мс (выставил 500)
  (не влияет на кол-во фпс) */
 void handle_root()
 {
+    clientConnected=true;
     server.send(200, "text/html", HTML);
     
-    delay(5000);
+    delay(200);
+    clientConnected = false;
 }
 
 // int mfinint;
@@ -46,7 +48,6 @@ void temp_sens(){
 
 WebServer& start_server(std::function<void(int, int, int, int)> interface_handler, std::function<void()> disconect_handler)
 {   
-    wifiClient = WiFiClient();
     if (!interface_handler){
         Serial.println("[ERROR] you have to give corrrect std::function<void(int, int, int, itn)> function");
         //throw(ESP_ERR_INVALID_ARG);
@@ -89,11 +90,6 @@ void start_WIFI_in_station_mode(const char *ssid,
     
 }
 
-
-
-void  handleClient(){
+void handleClient() {
     server.handleClient();
-    // if ( (wifiClient.connected()) && (WiFi.status() == WL_CONNECTED) ){
-    //     disconnect_handler_insides();
-    // }
 }
