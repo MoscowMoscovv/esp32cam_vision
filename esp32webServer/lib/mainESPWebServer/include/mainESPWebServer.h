@@ -45,9 +45,10 @@ void temp_sens();
  *      \param 1angle угол отклонения правого джойстика от центра
  *      \return None
  * \param disconect_handler обработчик отключения вай-фая
+ * \param disconect_handler обработчик переподключения вай-фая
  * \return WebServer
  **/
-WebServer& start_server(std::function<void(int, int, int, int)> interface_handler, std::function<void()> disconect_handler);
+WebServer& start_server(std::function<void(int, int, int, int)> interface_handler, std::function<void()> disconect_handler, std::function<void()> reconect_handler);
 
 /**
  * \brief Функция подключения к доступной точке WiFi

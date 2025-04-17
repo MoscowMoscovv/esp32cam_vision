@@ -105,10 +105,9 @@ void setup()
         
     #endif
 
-    // принимает объект std::function<void(int,int,int,int)>
-    // (server.arg("0speed"),server.arg("0angle"),server.arg("1speed"),server.arg("1angle"));
-
-    /*  
+    /* принимает объект std::function<void(int,int,int,int)>
+     (server.arg("0speed"),server.arg("0angle"),server.arg("1speed"),server.arg("1angle"));
+     
         функция будет вызываться при взаимодействии с джойстиками:
         степень отдаления джойстика от центра 0 - 100
         угол отклонения джойстика - для 0angle от 0 до 360, для 1angle - 180 или 360 
@@ -121,7 +120,8 @@ void setup()
     Serial.println("Starting Server");
     #endif
     WebServer& server = start_server([movementPtr = &movement](int s0,int a0, int s1,int a1){movementPtr -> commands_passer(s0, a0, s1, a1);},
-        [](){Serial.println("wifi disconected");});
+        [](){Serial.println("user disconnected");},
+        [](){Serial.println("user reconnected")});
 
 }
  

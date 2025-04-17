@@ -1,8 +1,13 @@
 #include "mainESPWebServer.h"
 
 WebServer server(80);
-std::function<void(int, int, int, int)> interface_handler_insides;
-std::function<void()> disconnect_handler_insides;
+
+long last_ping = -2000;
+
+std::function<void(int, int, int, int)> interface_handler_global;
+std::function<void()> disconnect_handler_global;
+std::function<void()> reconnect_handler_global;
+
 
 /* по какой-то причине не могу создать класс с приватными методами чтобы он нормально обрабатывал переменную типа WebServer */
 
@@ -10,29 +15,19 @@ float received_fps = 0.0;
 unsigned long time_p = 0;
 int8_t temp = 0;
 float result = 0;
-bool clientConnected = false;
-
+bool connected = false;
 /*  обработка главной страницы: обновление html-страницы каждые N мс (выставил 500)
  (не влияет на кол-во фпс) */
 void handle_root()
-{
-    clientConnected=true;
+{   
     server.send(200, "text/html", HTML);
-    
-    delay(200);
-    clientConnected = false;
 }
 
 // int mfinint;
 
 /*  обработчик входящей на uri /joystic_pos информации, вывод информации о положении джойстиков */
 void interface_feedback_handler(){
-    //mfinint = server.arg("0speed").toInt();
-
-    // Serial.print("incoming info ");
-    // Serial.println(server.arg("0speed").toInt());
-    
-    interface_handler_insides(server.arg("0speed").toInt(),server.arg("0angle").toInt(),server.arg("1speed").toInt(),server.arg("1angle").toInt());
+    interface_handler_global(server.arg("0speed").toInt(),server.arg("0angle").toInt(),server.arg("1speed").toInt(),server.arg("1angle").toInt());
     server.send(200);
 }
 
@@ -40,20 +35,22 @@ void interface_feedback_handler(){
 void temp_sens(){   
         server.send(200, "text/plain", String(temperatureRead()));
         server.sendContent(String(temperatureRead()));
+        last_ping = clock();
 }
 
 
 /* выставляет все хендлеры и запускает сервер, возвращает ссылку на него, тк в loop
  нужно положить server.handleClient()*/
 
-WebServer& start_server(std::function<void(int, int, int, int)> interface_handler, std::function<void()> disconect_handler)
+WebServer& start_server(std::function<void(int, int, int, int)> interface_handler, std::function<void()> disconect_handler,std::function<void()> reconect_handler )
 {   
-    if (!interface_handler){
-        Serial.println("[ERROR] you have to give corrrect std::function<void(int, int, int, itn)> function");
-        //throw(ESP_ERR_INVALID_ARG);
+    if (!interface_handler || !disconect_handler){
+        Serial.println("[ERROR] you have to give corrrect std::function<void(int, int, int, itn)> \
+            function for interface handler and std::function<void()> for disconect one");
     }
-    interface_handler_insides = interface_handler;
-    disconnect_handler_insides = disconect_handler;
+    interface_handler_global = interface_handler;
+    disconnect_handler_global = disconect_handler;
+    reconnect_handler_global = reconect_handler;
     server.on("/", handle_root);
     server.on("/joystic_pos",interface_feedback_handler);
     server.on("/temperature", temp_sens);
@@ -87,9 +84,28 @@ void start_WIFI_in_station_mode(const char *ssid,
     WiFi.softAP(ssid, password);
     WiFi.softAPConfig(local_ip, gateway, subnet);
     Serial.println("Create wifi station: " + String(ssid));
-    
+        
+    WiFi.onEvent([](arduino_event_id_t event, arduino_event_info_t info){disconnect_handler_global();}, ARDUINO_EVENT_WIFI_AP_STOP);
 }
+
+
 
 void handleClient() {
     server.handleClient();
+    WiFiClient wfc = server.client();
+    //Serial.println(clock() - last_ping);
+    
+    if (clock() - last_ping > 1500){
+        if (connected){
+            disconnect_handler_global();
+            connected = false;
+        }
+    }
+    else {
+        if (!connected){        
+            connected = true;
+            reconnect_handler_global();
+        }    
+    }
+
 }
