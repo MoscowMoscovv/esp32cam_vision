@@ -9,6 +9,7 @@
 <body  scroll="no" style="position: fixed; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
 color:rgb(128, 128, 128);
 font-size: xx-large;">
+    <button style = "position: fixed; top: 10px; left: 10px; background-color: rgba(255, 0, 0, 0.7); color: white; padding: 5px; font-size: 16px; border-radius: 5px;"onclick="fullStop()">Emergency Stop</button>
     <canvas id="canvas"></canvas>
     <img id="stream" src="http://192.168.1.184/stream" 
     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: -1;" 
@@ -53,7 +54,21 @@ font-size: xx-large;">
             map_req.set('angle'+id,0);
             map_req.set('speed'+id,0);
         }
-
+        function fullStop(){
+            request = new XMLHttpRequest();
+            s=''
+            for(id=0; id<center_coords.length; id++){
+                
+                if (id!=0){
+                    s+='&'
+                }
+                s+=(id+'speed='+0+
+                '&'+id+'angle='+0);
+        
+            }
+            request.open('GET','/joystic_pos?'+s);
+            request.send();
+        }
         function resize() {
             width = window.innerWidth;
             height = window.innerHeight;
@@ -66,6 +81,7 @@ font-size: xx-large;">
             ];
 
             // Устанавливаем размер канваса
+            //ctx.canvas.moveTo(height*0.3);
             ctx.canvas.width = width;
             ctx.canvas.height = height;
 
@@ -74,7 +90,6 @@ font-size: xx-large;">
             joystick(center_coords[0].x, center_coords[0].y, 0);
             joystick(center_coords[1].x, center_coords[1].y, 1);
     }
-
 
 
         function background() {
@@ -130,8 +145,8 @@ font-size: xx-large;">
             if (speed > 100) speed = 100;
 
 
-            map_req.set('speed'+id,speed);
-            map_req.set('angle'+id,angle_in_degrees);
+            map_req.set('speed'+id, speed);
+            map_req.set('angle'+id, angle_in_degrees);
             //document.getElementById(`x_coordinate_${id}`).innerText = Math.round(dx);
             //document.getElementById(`y_coordinate_${id}`).innerText = Math.round(dy);
             //document.getElementById(`speed_${id}`).innerText = speed;
@@ -182,7 +197,7 @@ font-size: xx-large;">
             if (buttons_pressed.includes(event.code)){
                 // console.log('WASD button released');
                 buttons_pressed.splice(buttons_pressed.indexOf(event.code),1);
-                console.log(buttons_pressed);
+                //console.log(buttons_pressed);
                 drawKeyboard();
             }
             
@@ -193,17 +208,11 @@ font-size: xx-large;">
 
 
         function getPosition(event) {
-            
                 var mouse_x = event.clientX || event.touches[0].clientX;
                 var mouse_y = event.clientY || event.touches[0].clientY;
                 coord.x = mouse_x - canvas.offsetLeft;
                 coord.y = mouse_y - canvas.offsetTop;
-            
-            
         }
-
-        
-
 
         function closest_to_mouse_joystick_id(){
     
@@ -238,6 +247,7 @@ font-size: xx-large;">
         function startDrawing(event) {
             paint = true;
             getPosition(event);
+            if (coord.y < height*0.3){return}
             //todo: insert here check for start joystick_id
             start_joystick_id = closest_to_mouse_joystick_id();
             not_start_joystick_id = Number(!start_joystick_id);
@@ -261,7 +271,7 @@ font-size: xx-large;">
             paint = false;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             background();
-            console.log(center_coords[0].x, center_coords[0].y,center_coords[1].x, center_coords[1].y,1);
+            //console.log(center_coords[0].x, center_coords[0].y,center_coords[1].x, center_coords[1].y,1);
             joystick(center_coords[0].x, center_coords[0].y,0);
             joystick(center_coords[1].x, center_coords[1].y,1);
             send_req();
@@ -277,9 +287,11 @@ font-size: xx-large;">
             if (!paint) return;
             //start_joystick_id = closest_to_mouse_joystick_id();
             event.preventDefault(); // Предотвращаем прокрутку страницы при мультитаче
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            background();
             getPosition(event);
+            if (coord.y < height*0.3){return}
+            background();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             if (start_joystick_id==0){
                 joystick(coord.x, coord.y, 0);
                 joystick(center_coords[1].x, center_coords[1].y,1);
