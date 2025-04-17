@@ -83,21 +83,23 @@ void start_WIFI_in_client_mode(const char *ssid, const char *password, const cha
 ``` C
 /**
  * \brief Функция запуска веб-сервера
- * \param [in] fn функция обработки входящих с веб-интерфейса значений
+ * \param [in] interface_handler функция обработки входящих с веб-интерфейса значений
  *      \param 0speed расстояния левого джойстика от центра
  *      \param 0angle угол отклонения левого джойстика от центра
  *      \param 1speed расстояния правого джойстика от центра
  *      \param 1angle угол отклонения правого джойстика от центра
  *      \return None
+ * \param disconect_handler обработчик отключения вай-фая
+ * \param disconect_handler обработчик переподключения вай-фая
  * \return WebServer
  **/
-WebServer& start_server(std::function<void(String, String, String, String)> fn);
+WebServer& start_server(std::function<void(int, int, int, int)> interface_handler, std::function<void()> disconect_handler, std::function<void()> reconect_handler);
 ```
 
 Функция обработки входящих сигналов с клиентской стороны
 ``` C
 /**
-* \brief Функция вызывается в цикле loop()
+* \brief Функция вызывается в цикле loop(). Происходит вызов встроенного в библиотеку WebServer.h метода для обработки вхождящих запросов и проверка на то, когда последний раз приходили запросы на получение температуры. Если таковые были слишком давно - вызывает функцию-обработчик, переданную в start_server(). При восстановлении соединения вызывает соответственную переданную функцию.
 * \return None
 **/
 void handleClient();
@@ -120,7 +122,7 @@ void handle_root();
 Функция обработки /temp_sens
 ```C
 /** 
- * \brief  обработчик uri /temp_sens, отправляет температуру процессора каждый раз, когда приходит запрос 
+ * \brief  обработчик uri /temp_sens, отправляет температуру процессора каждый раз, когда приходит запрос. Помимо этого при каждом получении запроса записывает время его получения в глобальную переменную
  *  \return None 
  **/
 void temp_sens();
