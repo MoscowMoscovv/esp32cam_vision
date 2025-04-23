@@ -1,7 +1,7 @@
 #include <Arduino.h>
 //#include "page.h"
 #include <mainESPWebServer.h>
-
+#include <smif_func_test.h>
 /* 
  * Макрос для подключение сервера в роли клента сети WiFi к маршрутизатору
  * и также изменением URL с цифрового IP на mDNS для подключения
@@ -27,6 +27,9 @@ class MovementData{
 
     void commands_passer(int speed0, int angle0, int speed1, int angle1){
         // Serial.println("RECEIVED JOYSTIC POS");
+        if (speed0 == 0 && speed1 == 0){
+            full_stop();
+        }
         omni_mode = speed0 > 0;
         
         // Serial.println("omni mode checked");
@@ -34,11 +37,32 @@ class MovementData{
             // Serial.println("omni mode case");
             sector = int((angle0 + 22.5) / 45) % 8;
             speed = speed0;
+            if (sector==0){
+                mDriver_func.omni_right(&mDriver_dat);
+            }
+            if (sector==4){
+                mDriver_func.omni_left(&mDriver_dat);
+            }
+            else{
+                if (sector<4){
+                    mDriver_func.forward(&mDriver_dat);
+                }
+                else{
+                    mDriver_func.backward(&mDriver_dat);
+
+                }
+            }
             }
         else {
             // Serial.println("not ommi mode case");
             sector = angle1/180 - 1;
             speed = speed1; 
+            if (sector){
+                mDriver_func.spin_left(&mDriver_dat);
+            }
+            else{
+                mDriver_func.spin_right(&mDriver_dat);
+            }
         }
         
         #ifdef SERIAL_DEBUG
@@ -55,6 +79,7 @@ class MovementData{
 
     void full_stop(){
         speed = 0;
+        mDriver_func.stop(&mDriver_dat);
         /* тут нужно вызывать команды для двигателя */
     }
 };
@@ -89,9 +114,10 @@ IPAddress subnet(255, 255, 255, 0);
 void setup()
 {
 
+
     Serial.begin(115200);
 
-   
+    mDriver_func.init(&mDriver_dat, &bts7960_func);
 
     #ifdef ESP_CLIENT_MODE
         
@@ -120,8 +146,8 @@ void setup()
     Serial.println("Starting Server");
     #endif
     WebServer& server = start_server([movementPtr = &movement](int s0,int a0, int s1,int a1){movementPtr -> commands_passer(s0, a0, s1, a1);},
-        [](){Serial.println("user disconnected");},
-        [](){Serial.println("user reconnected")});
+        [movementPtr = &movement](){Serial.println("user disconnected");movementPtr -> commands_passer(0,0,0,0)},
+        [](){Serial.println("user reconnected");});
 
 }
  
