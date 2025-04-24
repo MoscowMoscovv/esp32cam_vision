@@ -37,15 +37,51 @@ font-size: xx-large;">
             document.addEventListener('keydown',startDrawingKeyboard,{passive: false});
             document.addEventListener('keyup',stopDrawingKeyboard,{passive:false});
             window.addEventListener('resize', resize);
-            // for(id =0;id<= center_coords.length;id++){
-            //     document.getElementById("x_coordinate_"+id).innerText = 0;
-            //     document.getElementById("y_coordinate_"+id).innerText = 0;
-            //     document.getElementById("speed_"+id).innerText = 0;
-            //     document.getElementById("angle_"+id).innerText = 0;
-            // }
+            
         });
 
+        class Movement{
+            constructor(){
+                this.omni_mode = false;
+                this.angle=0
+                this.sector = 0
+            }
+            rewrite_fields(){
+                let a0=map_req.get('angle0');
+                let s0=map_req.get('speed0');
+                let a1=map_req.get('angle1');
+                let s1=map_req.get('speed1');
+
+                var new_sector;
+                var new_mode;
+
+                if (s0 == 0 && s1 == 0){
+                    fullStop();
+                    return;
+                }
+                new_mode = s0 > 0;
+                
+                if (this.omni_mode){
+                    this.angle = a0;
+                }
+                else{
+                    this.angle = a1;
+                }
+                console.log(Math.round(((this.angle + 22.5) / 45) % 7));
+                new_sector = Math.round(((this.angle + 22.5) / 45) % 7);
+                if (this.sector == new_sector){
+                    return;
+                }
+                else{
+                    console.log("sector changed, from "+ this.sector + " to " + new_sector)
+                    this.sector = new_sector;
+                    send_req();
+                }
+            
+            }
+        }
         
+        var movement_data = new Movement();
         var center_coords =[{x : width/5, y : height/3}, {x : 4*width/5, y : height/3}]
         var width, height, radius, x_orig, y_orig;
 
@@ -178,7 +214,7 @@ font-size: xx-large;">
             if (e){ x2 += radius}
             joystick(x1,y1,0);
             joystick(x2,y2,1);
-            send_req();
+            movement_data.rewrite_fields();;
         }
 
         function startDrawingKeyboard(event){
@@ -238,7 +274,25 @@ font-size: xx-large;">
                 '&'+id+'angle='+map_req.get('angle'+id));
         
             }
-            //console.log(s);
+            console.log("sending req: ");
+            console.log(s);
+            request.open('GET','/joystic_pos?'+s);
+            request.send();
+        }
+
+        function send_stop_req(){
+            request = new XMLHttpRequest();
+            s=''
+            for(id=0; id<center_coords.length; id++){
+                
+                if (id!=0){
+                    s+='&'
+                }
+                s+=(id+'speed=0'+
+                '&'+id+'angle=0');
+        
+            }
+            console.log(s);
             request.open('GET','/joystic_pos?'+s);
             request.send();
         
@@ -263,7 +317,7 @@ font-size: xx-large;">
             }
             
             //Draw();
-            send_req();
+            movement_data.rewrite_fields();;
         }
 
 
@@ -274,13 +328,7 @@ font-size: xx-large;">
             //console.log(center_coords[0].x, center_coords[0].y,center_coords[1].x, center_coords[1].y,1);
             joystick(center_coords[0].x, center_coords[0].y,0);
             joystick(center_coords[1].x, center_coords[1].y,1);
-            send_req();
-            // for (id in [0,1]){
-            //     document.getElementById(`x_coordinate_${id}`).innerText = 0;
-            //     document.getElementById(`y_coordinate_${id}`).innerText = 0;
-            //     document.getElementById(`speed_${id}`).innerText = 0;
-            //     document.getElementById(`angle_${id}`).innerText = 0;
-            // }
+            send_stop_req();
         }
 
         function Draw(event) {
@@ -301,7 +349,7 @@ font-size: xx-large;">
                 joystick(coord.x,center_coords[1].y,1);
             }
 
-            send_req();
+            movement_data.rewrite_fields();;
             }
         
         function getTemperature() {

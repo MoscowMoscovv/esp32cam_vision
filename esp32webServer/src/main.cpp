@@ -23,45 +23,87 @@ class MovementData{
     public:
     bool omni_mode;
     int8_t sector;
+    int8_t new_sector;
     int8_t speed;
 
     void commands_passer(int speed0, int angle0, int speed1, int angle1){
-        // Serial.println("RECEIVED JOYSTIC POS");
+        Serial.println("RECEIVED JOYSTIC POS");
         if (speed0 == 0 && speed1 == 0){
+            #ifdef SERIAL_DEBUG
+            Serial.println("Full stop");
+            #endif
             full_stop();
+            //delay(100);
+            return;
+
         }
         omni_mode = speed0 > 0;
-        
+
         // Serial.println("omni mode checked");
         if (omni_mode) {
-            // Serial.println("omni mode case");
-            sector = int((angle0 + 22.5) / 45) % 8;
-            speed = speed0;
+            // Serial.println("omni mode case");w
+            new_sector = int((angle0 + 22.5) / 45) % 8;
+
+            // если тот же сектор, что уже записан
+            if (sector == new_sector && speed!=0){
+                Serial.println(speed);
+                Serial.println("same sector");
+                return;
+            }
+            else{
+                sector = new_sector;
+                speed = speed0;
+            }
+
             if (sector==0){
                 mDriver_func.omni_right(&mDriver_dat);
+                //delay(100);
+                return;
             }
             if (sector==4){
                 mDriver_func.omni_left(&mDriver_dat);
+                //delay(100);
+                return;
             }
             else{
                 if (sector<4){
                     mDriver_func.forward(&mDriver_dat);
+                    //delay(100);
+                    return;
+
                 }
                 else{
                     mDriver_func.backward(&mDriver_dat);
+                    //delay(100);
+                    return;
 
                 }
             }
             }
         else {
             // Serial.println("not ommi mode case");
-            sector = angle1/180 - 1;
-            speed = speed1; 
-            if (sector){
+            new_sector = angle1/180 - 1;
+
+            if (sector == new_sector && speed!=0){
+                return;
+            }
+            else {
+                sector = new_sector;
+                speed = speed1; 
+
+            }
+
+            if (sector==1){
                 mDriver_func.spin_left(&mDriver_dat);
+                //delay(100);
+                return;
+
             }
             else{
                 mDriver_func.spin_right(&mDriver_dat);
+                //delay(100);
+                return;
+
             }
         }
         
@@ -80,6 +122,8 @@ class MovementData{
     void full_stop(){
         speed = 0;
         mDriver_func.stop(&mDriver_dat);
+        Serial.println("Stop is over");
+        //delay(100);
         /* тут нужно вызывать команды для двигателя */
     }
 };
@@ -114,7 +158,6 @@ IPAddress subnet(255, 255, 255, 0);
 void setup()
 {
 
-
     Serial.begin(115200);
 
     mDriver_func.init(&mDriver_dat, &bts7960_func);
@@ -145,8 +188,9 @@ void setup()
     #ifdef SERIAL_DEBUG
     Serial.println("Starting Server");
     #endif
+    movement.full_stop();
     WebServer& server = start_server([movementPtr = &movement](int s0,int a0, int s1,int a1){movementPtr -> commands_passer(s0, a0, s1, a1);},
-        [movementPtr = &movement](){Serial.println("user disconnected");movementPtr -> commands_passer(0,0,0,0)},
+        [movementPtr = &movement](){Serial.println("user disconnected");},
         [](){Serial.println("user reconnected");});
 
 }

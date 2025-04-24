@@ -238,7 +238,25 @@ font-size: xx-large;">
                 '&'+id+'angle='+map_req.get('angle'+id));
         
             }
-            //console.log(s);
+            console.log(s);
+            request.open('GET','/joystic_pos?'+s);
+            request.send();
+        
+        }
+
+        function send_stop_req(){
+            request = new XMLHttpRequest();
+            s=''
+            for(id=0; id<center_coords.length; id++){
+                
+                if (id!=0){
+                    s+='&'
+                }
+                s+=(id+'speed=0'+
+                '&'+id+'angle=0');
+        
+            }
+            console.log(s);
             request.open('GET','/joystic_pos?'+s);
             request.send();
         
@@ -274,13 +292,7 @@ font-size: xx-large;">
             //console.log(center_coords[0].x, center_coords[0].y,center_coords[1].x, center_coords[1].y,1);
             joystick(center_coords[0].x, center_coords[0].y,0);
             joystick(center_coords[1].x, center_coords[1].y,1);
-            send_req();
-            // for (id in [0,1]){
-            //     document.getElementById(`x_coordinate_${id}`).innerText = 0;
-            //     document.getElementById(`y_coordinate_${id}`).innerText = 0;
-            //     document.getElementById(`speed_${id}`).innerText = 0;
-            //     document.getElementById(`angle_${id}`).innerText = 0;
-            // }
+            send_stop_req();
         }
 
         function Draw(event) {
